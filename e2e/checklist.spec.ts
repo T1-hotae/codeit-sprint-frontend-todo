@@ -1,20 +1,28 @@
 import { expect, test, type Page } from "@playwright/test";
 
 /**
- * docs/[00] checklist.md 의 평가 체크리스트를 그대로 옮긴 E2E 테스트.
- * 외부 API는 page.route 로 인메모리 모킹한다 (네트워크·데이터 상태와 무관하게 결정적).
+ * 평가 체크리스트(docs/[00] checklist.md) E2E 테스트.
+ * describe 구성은 체크리스트 섹션(공통 / 목록 / 상세)과 같다.
+ * 외부 API는 mockApi()로 인메모리 모킹하므로 네트워크·서버 데이터와 무관하게 결정적으로 동작한다.
+ * 배포 접근 여부는 코드로 검증할 수 없어 제외.
  */
 
+// ---------- 테스트 도구 ----------
+
 type Item = { id: number; tenantId: string; name: string; memo: string | null; imageUrl: string | null; isCompleted: boolean };
+// 업로드 테스트용 1x1 PNG
 const PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==", "base64");
 const IMG_URL = `data:image/png;base64,${PNG.toString("base64")}`;
+// 모킹 응답에 붙이는 CORS 헤더 (브라우저가 다른 origin 응답을 막지 않도록)
 const CORS = { "access-control-allow-origin": "*", "access-control-allow-headers": "*", "access-control-allow-methods": "*" };
 
+/** API 전체를 가로채 seed 데이터를 가진 가짜 서버로 대체한다 (목록/생성/수정/삭제/이미지 업로드) */
 async function mockApi(page: Page, seed: Item[] = []) {
   const db = [...seed];
   let nextId = 100;
   await page.route(/assignment-todolist-api\.vercel\.app\/api\//, async (route) => {
     const req = route.request();
+    // tenantId 앞부분을 제거해 "/items/1" 같은 리소스 경로만 남긴다
     const path = new URL(req.url()).pathname.replace(/^.*\/api\/[^/]+/, "");
     const m = path.match(/^\/items\/(\d+)$/);
     const ok = (body: unknown) => route.fulfill({ json: body, headers: CORS });
@@ -38,14 +46,16 @@ async function mockApi(page: Page, seed: Item[] = []) {
   });
 }
 
+// 테스트 데이터 생성 헬퍼
 const todo = (id: number, name: string, isCompleted = false): Item => ({ id, tenantId: "t", name, memo: null, imageUrl: null, isCompleted });
+// 이미지 업로드용 숨겨진 file input
 const fileInput = (page: Page) => page.locator('input[type="file"]');
 
 test.describe("공통", () => {
   test("컬러 시스템: 시안 토큰이 적용된다", async ({ page }) => {
     await mockApi(page);
     await page.goto("/");
-    // 할 일이 없을 때 추가하기 버튼은 violet-600
+    // 할 일이 없을 때 추가하기 버튼은 시안의 violet-600(#7c3aed)
     await expect(page.getByRole("button", { name: "추가하기" })).toHaveCSS("background-color", "rgb(124, 58, 237)");
   });
 
@@ -56,11 +66,11 @@ test.describe("공통", () => {
       await page.goto("/");
       await expect(page.getByText("진행 항목")).toBeVisible();
 
-      // 가로 스크롤 없음
+      // 1) 가로 스크롤이 생기지 않는다
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-      // 모바일은 버튼 텍스트 숨김(아이콘만), 태블릿 이상은 표시
+      // 2) 모바일은 버튼 텍스트 숨김(아이콘만), 태블릿 이상은 표시
       await expect(page.getByText("추가하기", { exact: true })).toBeVisible({ visible: width >= 768 });
-      // 데스크탑만 TODO/DONE 좌우 2열
+      // 3) 데스크탑(lg 이상)만 TODO/DONE 좌우 2열, 그 외는 위아래
       const a = (await page.getByRole("heading", { name: "TODO" }).boundingBox())!;
       const b = (await page.getByRole("heading", { name: "DONE" }).boundingBox())!;
       if (width >= 1024) expect(b.x).toBeGreaterThan(a.x + a.width);
@@ -75,7 +85,7 @@ test.describe("할 일 목록 페이지 (/)", () => {
     await page.goto("/items/1");
     await page.getByRole("link", { name: /do it/ }).click();
     await expect(page).toHaveURL("/");
-    // 전체 새로고침이면 window 에 심은 마커가 사라진다
+    // 클라이언트 이동이면 window 마커가 남고, 전체 새로고침이면 사라진다
     await page.evaluate(() => ((window as unknown as { __m: number }).__m = 1));
     await page.getByRole("link", { name: /do it/ }).click();
     await page.waitForLoadState("load");
@@ -128,7 +138,7 @@ test.describe("할 일 상세 페이지 (/items/{itemId})", () => {
     await page.goto("/items/1");
 
     await page.getByLabel("할 일 이름").fill("바뀐 이름");
-    await page.getByRole("checkbox").click(); // 상태: 완료
+    await page.getByRole("checkbox").click(); // 상태를 완료로 변경
     await page.locator("textarea").fill("메모 내용");
     await fileInput(page).setInputFiles({ name: "photo.png", mimeType: "image/png", buffer: PNG });
     await expect(page.getByAltText("첨부 이미지")).toBeVisible();
