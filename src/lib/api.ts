@@ -1,5 +1,6 @@
 import type { Todo } from "@/types/todo";
 
+// 환경변수: API 주소 + 본인 tenantId (.env.local)
 const BASE = `${process.env.NEXT_PUBLIC_API_URL}/${process.env.NEXT_PUBLIC_TENANT_ID}`;
 
 /** 공통 fetch: 실패 시 에러를 던진다 */
@@ -9,6 +10,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json();
 }
 
+// JSON 본문 요청용 헤더/바디 생성
 const json = (body: unknown) => ({
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify(body),

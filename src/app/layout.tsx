@@ -2,11 +2,13 @@ import type { Metadata } from "next";
 import Header from "@/components/Header";
 import "./globals.css";
 
+/** 사이트 메타데이터 (탭 제목·설명) */
 export const metadata: Metadata = {
   title: "do it ; todo",
   description: "할 일 목록을 관리하는 To Do 서비스",
 };
 
+/** 전체 공통 레이아웃: 헤더 + 본문 컨테이너 */
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ko">

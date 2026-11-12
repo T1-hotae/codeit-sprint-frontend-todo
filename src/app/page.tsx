@@ -10,25 +10,23 @@ import type { Todo } from "@/types/todo";
 
 /** 할 일 목록 페이지 (/) : 추가 / 진행·완료 구분 조회 / 완료 토글 */
 export default function HomePage() {
-  // TODO(API): 초기값을 []로 바꾸고 useEffect에서 목록 조회
+  // 서버에서 받아온 전체 목록 (진행/완료 구분은 렌더링 시 filter)
   const [todos, setTodos] = useState<Todo[]>([]);
+  // 상단 입력창 값
   const [name, setName] = useState("");
 
-  // 목록 조회
+  // 목록 조회 (추가·토글 후 재사용)
   const load = () =>
     getTodos()
       .then(setTodos)
       .catch(() => alert("목록을 불러오지 못했어요."));
 
-  // 사이드 이펙트 : 페이지 로딩 시 목록 조회
+  // 최초 진입 시 목록 조회
   useEffect(() => {
     load();
   }, []);
 
-  /**
-   * 할 일 추가
-   * form submit 하나로 "추가하기 버튼 클릭"과 "엔터"를 모두 처리
-   *  */
+  /** 할 일 추가: form submit 하나로 "추가하기 버튼 클릭"과 "엔터"를 모두 처리 */
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = name.trim();
@@ -38,12 +36,13 @@ export default function HomePage() {
     load();
   };
 
-  // 완료 토글
+  // 완료 ↔ 진행 중 토글
   const handleToggle = async (todo: Todo) => {
     await updateTodo(todo.id, { isCompleted: !todo.isCompleted });
     load(); // 변경된 상태를 목록에 반영
   };
 
+  // 목록이 비었는지 (추가하기 버튼 강조 여부 결정)
   const isEmpty = todos.length === 0;
 
   return (

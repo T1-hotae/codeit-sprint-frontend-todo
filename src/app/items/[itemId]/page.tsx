@@ -14,22 +14,23 @@ export default function ItemDetailPage() {
   const { itemId } = useParams<{ itemId: string }>();
   const router = useRouter();
 
-  // TODO(API): 초기값 null, useEffect에서 상세 조회
+  // 상세 데이터 (로딩 전에는 null)
   const [todo, setTodo] = useState<Todo | null>(null);
 
+  // 진입 시 상세 조회
   useEffect(() => {
     getTodo(itemId)
       .then(setTodo)
       .catch(() => alert("할 일을 불러오지 못했어요."));
   }, [itemId]);
 
-  // 수정 사항이 생기면 "수정 완료" 버튼을 lime 색으로 활성화 (시안)
+  // 수정 사항이 생기면 "수정 완료" 버튼을 lime 색으로 강조 (시안)
   const [dirty, setDirty] = useState(false);
 
   if (!todo)
     return <p className="py-20 text-center text-slate-400">불러오는 중...</p>;
 
-  // todo 상태를 갱신하는 헬퍼
+  // 화면 상태(todo)를 부분 갱신하고 dirty 표시
   const update = (patch: Partial<Todo>) => {
     setTodo({ ...todo, ...patch });
     setDirty(true);
