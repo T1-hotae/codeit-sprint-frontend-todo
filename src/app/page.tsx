@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Button from "@/components/Button";
+import LoadingOverlay from "@/components/LoadingOverlay";
 import TextInput from "@/components/TextInput";
 import TodoSection from "@/components/TodoSection";
 import { PlusIcon } from "@/components/Icons";
@@ -15,11 +16,17 @@ export default function HomePage() {
   // 상단 입력창 값
   const [name, setName] = useState("");
 
+  // 목록 조회 중 여부 (로딩 오버레이 표시용)
+  const [loading, setLoading] = useState(true);
+
   // 목록 조회 (추가·토글 후 재사용)
-  const load = () =>
-    getTodos()
+  const load = () => {
+    setLoading(true);
+    return getTodos()
       .then(setTodos)
-      .catch(() => alert("목록을 불러오지 못했어요."));
+      .catch(() => alert("목록을 불러오지 못했어요."))
+      .finally(() => setLoading(false));
+  };
 
   // 최초 진입 시 목록 조회
   useEffect(() => {
@@ -47,6 +54,7 @@ export default function HomePage() {
 
   return (
     <>
+      {loading && <LoadingOverlay />}
       <form onSubmit={handleAdd} className="mb-10 flex gap-2 md:gap-4">
         <TextInput
           value={name}

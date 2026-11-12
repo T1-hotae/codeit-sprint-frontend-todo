@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Button from "@/components/Button";
 import CheckButton from "@/components/CheckButton";
 import ImageUpload from "@/components/ImageUpload";
+import LoadingOverlay from "@/components/LoadingOverlay";
 import { CheckIcon, XIcon } from "@/components/Icons";
 import { deleteTodo, getTodo, updateTodo, uploadImage } from "@/lib/api";
 import type { Todo } from "@/types/todo";
@@ -27,8 +28,7 @@ export default function ItemDetailPage() {
   // 수정 사항이 생기면 "수정 완료" 버튼을 lime 색으로 강조 (시안)
   const [dirty, setDirty] = useState(false);
 
-  if (!todo)
-    return <p className="py-20 text-center text-slate-400">불러오는 중...</p>;
+  if (!todo) return <LoadingOverlay />;
 
   // 화면 상태(todo)를 부분 갱신하고 dirty 표시
   const update = (patch: Partial<Todo>) => {
