@@ -41,6 +41,7 @@ export default function HomePage() {
   // 완료 토글
   const handleToggle = async (todo: Todo) => {
     await updateTodo(todo.id, { isCompleted: !todo.isCompleted });
+    load(); // 변경된 상태를 목록에 반영
   };
 
   const isEmpty = todos.length === 0;
