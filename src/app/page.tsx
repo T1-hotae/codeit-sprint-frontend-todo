@@ -1,103 +1,51 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useState } from "react";
+import Button from "@/components/Button";
+import TextInput from "@/components/TextInput";
+import TodoSection from "@/components/TodoSection";
+import { PlusIcon } from "@/components/Icons";
+import { MOCK_TODOS } from "@/lib/mock";
+import type { Todo } from "@/types/todo";
+
+/** 할 일 목록 페이지 (/) : 추가 / 진행·완료 구분 조회 / 완료 토글 */
+export default function HomePage() {
+  // TODO(API): 초기값을 []로 바꾸고 useEffect에서 목록 조회
+  const [todos, setTodos] = useState<Todo[]>(MOCK_TODOS);
+  const [name, setName] = useState("");
+
+  // form submit 하나로 "추가하기 버튼 클릭"과 "엔터"를 모두 처리
+  const handleAdd = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    // TODO(API): 할 일 생성 요청 후 목록 갱신
+    setTodos((prev) => [...prev, { id: Date.now(), tenantId: "mock", name: trimmed, memo: null, imageUrl: null, isCompleted: false }]);
+    setName("");
+  };
+
+  const handleToggle = (todo: Todo) => {
+    // TODO(API): isCompleted 반전해서 수정 요청 후 목록 갱신
+    setTodos((prev) => prev.map((t) => (t.id === todo.id ? { ...t, isCompleted: !t.isCompleted } : t)));
+  };
+
+  const isEmpty = todos.length === 0;
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <>
+      <form onSubmit={handleAdd} className="mb-10 flex gap-2 md:gap-4">
+        <TextInput value={name} onChange={(e) => setName(e.target.value)} placeholder="할 일을 입력해주세요" aria-label="할 일 입력" />
+        {/* 할 일이 없을 땐 보라색으로 강조 */}
+        <Button type="submit" variant={isEmpty ? "primary" : "default"} icon={<PlusIcon />} aria-label="추가하기">
+          <span className="hidden md:inline">추가하기</span>
+        </Button>
+      </form>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+      {/* 모바일·태블릿: 위아래 / 데스크탑: 좌우 2열 */}
+      <div className="flex flex-col gap-12 lg:flex-row lg:gap-6">
+        <TodoSection type="todo" todos={todos.filter((t) => !t.isCompleted)} onToggle={handleToggle} />
+        <TodoSection type="done" todos={todos.filter((t) => t.isCompleted)} onToggle={handleToggle} />
+      </div>
+    </>
   );
 }
