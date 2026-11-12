@@ -41,3 +41,11 @@ yarn-error.log*
 next-env.d.ts
 
 .claude
+
+# agent docs
+AGENTS.md
+CLAUDE.md
+
+# playwright
+/test-results/
+/playwright-report/
