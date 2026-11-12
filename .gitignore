@@ -49,3 +49,5 @@ CLAUDE.md
 # playwright
 /test-results/
 /playwright-report/
+
+.vercel
